@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # --- FRONTEND (Worker 1) ---
+  frontend:
+    image: votre_user/my-frontend:v1
+    ports:
+      - "80:80"
+    networks:
+      - front-net
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.hostname == worker1]
+
+  # --- BACKEND (Manager 1) - Scaled to 2 ---
+  backend:
+    image: votre_user/my-backend:v1
+    networks:
+      - front-net
+      - back-net
+    deploy:
+      replicas: 2 
+      placement:
+        constraints: [node.hostname == manager1]
+
+  # --- DATABASE (Worker 2) - WITH VOLUME ---
+  database:
+    image: redis:alpine
+    networks:
+      - back-net
+    volumes:
+      # Maps the folder /data inside Redis to a Docker Volume named 'db-data'
+      - db-data:/data
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.hostname == worker2]
+
+networks:
+  front-net:
+    driver: overlay
+  back-net:
+    driver: overlay
+
+# Define the volume
+volumes:
+  db-data:
