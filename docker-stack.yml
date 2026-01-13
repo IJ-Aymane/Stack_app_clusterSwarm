@@ -2,8 +2,9 @@ version: '3.8'
 
 services:
   # --- FRONTEND (Worker 1) ---
+  # Uses the public Nginx image
   frontend:
-    image: votre_user/my-frontend:v1
+    image: nginx:latest
     ports:
       - "80:80"
     networks:
@@ -11,31 +12,35 @@ services:
     deploy:
       replicas: 1
       placement:
-        constraints: [node.hostname == worker1]
+        constraints:
+          - node.hostname == worker1
 
-  # --- BACKEND (Manager 1) - Scaled to 2 ---
+  # --- BACKEND (Manager 1) ---
+  # Uses the public Apache (httpd) image
   backend:
-    image: votre_user/my-backend:v1
+    image: httpd:latest
     networks:
       - front-net
       - back-net
     deploy:
-      replicas: 2 
+      replicas: 2
       placement:
-        constraints: [node.hostname == manager1]
+        constraints:
+          - node.hostname == manager1
 
-  # --- DATABASE (Worker 2) - WITH VOLUME ---
+  # --- DATABASE (Worker 2) ---
+  # Uses the public Redis image
   database:
     image: redis:alpine
     networks:
       - back-net
     volumes:
-      # Maps the folder /data inside Redis to a Docker Volume named 'db-data'
       - db-data:/data
     deploy:
       replicas: 1
       placement:
-        constraints: [node.hostname == worker2]
+        constraints:
+          - node.hostname == worker2
 
 networks:
   front-net:
@@ -43,6 +48,5 @@ networks:
   back-net:
     driver: overlay
 
-# Define the volume
 volumes:
   db-data:
